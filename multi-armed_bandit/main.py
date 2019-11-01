@@ -71,7 +71,8 @@ for k in range(actions,n):
     UCBV.append(rewards[k][choice])
     UCBV_exp,UCBV_var,UCBV_upperbound,UCBV_actions = update_UCBV(k,UCBV_exp,UCBV_var,UCBV_upperbound,UCBV_actions,choice)
 
-#5- LinUCB algorithm
+
+#6- LinUCB algorithm
 #Auxiliary functions
 def compute_teta(_A,_b):
     return np.dot(np.linalg.inv(_A),_b)
