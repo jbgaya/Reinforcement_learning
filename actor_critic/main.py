@@ -2,7 +2,7 @@ import gym
 import gridworld
 from gym import wrappers, logger
 import agents
-from agents import A2C
+from agents import A2C,PPO
 
 #
 episode_count = 3000
@@ -19,10 +19,11 @@ d_in = env.observation_space.shape[0]
 d_out = env.action_space.n
 
 #Initializing agent
-agent = A2C.Batch_agent(d_in,d_out)
+#agent = A2C.Batch_agent(d_in,d_out)
+agent = PPO.KL_agent(d_in,d_out)
 
 #Training phase
-print("Starting train phase on ",episode_count," episodes :")
+print("Starting training phase on ",episode_count," episodes :")
 for i in range(1,episode_count+1):
     obs = env.reset()
     j = 0
@@ -41,7 +42,7 @@ for i in range(1,episode_count+1):
             break
 
 #Testing phase
-print("Starting test phase on ",test_episode_count," episodes :")
+print("Starting testing phase on ",test_episode_count," episodes :")
 for i in range(1,test_episode_count):
     obs = env.reset()
     j = 0

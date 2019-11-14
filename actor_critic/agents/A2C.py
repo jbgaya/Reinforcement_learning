@@ -1,15 +1,4 @@
-import math
-import numpy as np
-import torch
-import torchvision.datasets as datasets
-from torch.utils.data import Dataset, DataLoader
-import torch.nn.functional as F
-from torch.distributions.multinomial import Categorical
-from torch import nn
-from torch import optim
-import copy
-from random import sample
-from collections import deque
+from agents.helper import *
 
 class NN(nn.Module):
     def __init__(self, inSize, outSize, layers,softmax=False):
