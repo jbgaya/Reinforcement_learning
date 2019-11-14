@@ -5,7 +5,7 @@ import agents
 from agents import A2C,PPO
 
 #
-episode_count = 3000
+episode_count = 500
 test_episode_count = 10
 
 
@@ -20,7 +20,7 @@ d_out = env.action_space.n
 
 #Initializing agent
 #agent = A2C.Batch_agent(d_in,d_out)
-agent = PPO.KL_agent(d_in,d_out)
+agent = PPO.Clip_agent(d_in,d_out)
 
 #Training phase
 print("Starting training phase on ",episode_count," episodes :")
@@ -43,7 +43,7 @@ for i in range(1,episode_count+1):
 
 #Testing phase
 print("Starting testing phase on ",test_episode_count," episodes :")
-for i in range(1,test_episode_count):
+for i in range(1,test_episode_count+1):
     obs = env.reset()
     j = 0
     rsum = 0

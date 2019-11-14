@@ -1,10 +1,9 @@
-
 from agents.helper import *
 
 class Clip_agent():
 
-    def __init__(self,d_in,d_out,layers_V=[200],layers_f=[200],K=10,epochs=10,
-    alpha=0.96,beta=0.5,epsilon=0.1,gamma=0.9999,entropy=0.01,device=torch.device("cpu")):
+    def __init__(self,d_in,d_out,layers_V=[200],layers_f=[200],K=10,epochs=20,
+    alpha=0.96,epsilon=0.1,gamma=0.9999,entropy=0.01,device=torch.device("cpu")):
         self.device = device
 
         #NN to approximate V (baseline)
@@ -24,7 +23,6 @@ class Clip_agent():
         self.K = K
         self.epochs = epochs
         self.gamma = gamma
-        self.beta = beta
         self.alpha = alpha
         self.epsilon = epsilon
         self.entropy = entropy
@@ -36,18 +34,21 @@ class Clip_agent():
     def update(self):
 
         #1- fit V (baseline function)
-        for episode in self.batch:
-            R = torch.zeros(1,dtype=torch.double)
-            Vloss = torch.zeros(1,requires_grad=True,dtype=torch.double)
-            for lastobs,action,obs,r in reversed(episode):
-                R = r + self.gamma * R
-                Vloss = Vloss + self.loss_V( self.V.forward(lastobs) , R )
-            Vloss.backward()
-            self.opt_V.step()
-            self.opt_V.zero_grad()
+        for epoch in range(self.epochs):
+            for episode in self.batch:
+                R = torch.zeros(1,dtype=torch.double)
+                Vloss = torch.zeros(1,requires_grad=True,dtype=torch.double)
+                for lastobs,action,obs,r in reversed(episode):
+                    R = r + self.gamma * R
+                    Vloss = Vloss + self.loss_V( self.V.forward(lastobs) , R )
+                Vloss = Vloss / self.K
+                Vloss.backward()
+                self.opt_V.step()
+                self.opt_V.zero_grad()
 
         #2- fit f (policy function)
         for epoch in range(self.epochs):
+            total_loss = 0
             self.lastf.load_state_dict(self.f.state_dict())
             for episode in self.batch:
                 A = torch.zeros(1,dtype=torch.double)
@@ -63,15 +64,18 @@ class Clip_agent():
                     #print(newpi[action]/lastpi[action])
                     #print(torch.clamp((newpi[action]/lastpi[action]),1-self.epsilon,1+self.epsilon))
                     floss = floss - min( (newpi[action]/lastpi[action]) * A,
-                        torch.clamp((newpi[action]/lastpi[action]),1-self.epsilon,1+self.epsilon) * A) + self.entropy * entr
+                        torch.clamp((newpi[action]/lastpi[action]),1-self.epsilon,1+self.epsilon) * A ) + self.entropy * entr
                 #print(floss.item())
+                total_loss += -round(floss.item(),2)
                 floss.backward()
                 self.opt_f.step()
                 self.opt_f.zero_grad()
+            #print("epoch ",epoch,":",total_loss)
 
     def act(self,obs,r,done):
         obs = phi(obs,self.device)
-        pi = Categorical(probs=self.f.forward(obs))
+        with torch.no_grad():
+            pi = Categorical(probs=self.f.forward(obs))
         action =pi.sample()
 
         if(self.start):
@@ -132,9 +136,6 @@ class KL_agent():
         self.lastobs = None
         self.lastaction = None
         self.start = True
-
-    def phi(self,obs):
-        return torch.Tensor(obs).to(device,torch.double)
 
     def update_kl(self,kl):
 
@@ -202,7 +203,6 @@ class KL_agent():
             self.start = True
 
             if len(self.batch) == self.K:
-                #print("updating PPO agent policy...")
                 self.update()
                 self.batch = []
 

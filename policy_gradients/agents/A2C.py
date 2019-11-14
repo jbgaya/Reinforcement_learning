@@ -68,22 +68,10 @@ class Batch_agent():
         floss.backward()
         self.opt_f.step()
 
-
-        #2- fit f (policy function)
-        #A = torch.zeros(1,dtype=torch.double)
-        #floss = torch.zeros(1,requires_grad=True,dtype=torch.double)
-        #for lastobs,action,obs,r in reversed(self.episode):
-        #    with torch.no_grad():
-        #        A = r + self.gamma * self.V.forward(obs) - self.V.forward(lastobs)
-        #    floss = floss - torch.log(self.f.forward(lastobs)[action]) * A
-        #floss.backward()
-        #self.opt_f.step()
-        #self.opt_V.zero_grad()
-        #self.opt_f.zero_grad()
-
     def act(self,obs,r,done):
         obs = phi(obs,self.device)
-        pi = Categorical(probs=self.f.forward(obs))
+        with torch.no_grad():
+            pi = Categorical(probs=self.f.forward(obs))
         action =pi.sample()
 
         if(self.start):
@@ -103,7 +91,8 @@ class Batch_agent():
 
     def act_notrain(self,obs,r,done):
         obs = phi(obs,self.device)
-        pi = Categorical(probs=self.f.forward(obs))
+        with torch.no_grad():
+            pi = Categorical(probs=self.f.forward(obs))
         action =pi.sample()
         return int(action)
 
@@ -111,7 +100,7 @@ class Batch_agent():
 
 class Online_agent():
 
-    def __init__(self,d_in,d_out,layers_V=[200],layers_f=[200],gamma=0.99,device=torch.device("cpu")):
+    def __init__(self,d_in,d_out,layers_V=[200],layers_f=[200],gamma=0.99,alpha=0.96,device=torch.device("cpu")):
         self.device = device
 
         #NN to approximate V_hat (baseline) and f (distribution function)
@@ -125,6 +114,7 @@ class Online_agent():
         self.opt_f.zero_grad()
 
         self.gamma = gamma
+        self.alpha = alpha
 
         self.lastobs = None
         self.lastaction = None
@@ -143,7 +133,8 @@ class Online_agent():
 
         #2- fit f (policy function)
         with torch.no_grad():
-            A = r + self.gamma * self.V.forward(obs) - self.V.forward(lastobs)
+            delta = r + self.gamma * self.V.forward(obs) - self.V.forward(lastobs)
+            A = self.gamma * self.alpha * A + delta
         floss = - torch.log(self.f.forward(lastobs)[action]) * A
         floss.backward()
         self.opt_f.step()
@@ -151,7 +142,8 @@ class Online_agent():
 
     def act(self,obs,r,done):
         obs = phi(obs,self.device)
-        pi = Categorical(probs=self.f.forward(obs))
+        with torch.no_grad():
+            pi = Categorical(probs=self.f.forward(obs))
         action =pi.sample()
 
         if(self.start):
@@ -170,6 +162,7 @@ class Online_agent():
 
     def act_notrain(self,obs,r,done):
         obs = phi(obs,self.device)
-        pi = Categorical(probs=self.f.forward(obs))
+        with torch.no_grad():
+            pi = Categorical(probs=self.f.forward(obs))
         action =pi.sample()
         return int(action)
