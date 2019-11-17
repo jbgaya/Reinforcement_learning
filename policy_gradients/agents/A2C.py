@@ -21,7 +21,7 @@ def phi(obs,device):
     return torch.Tensor(obs).to(device,torch.double)
 
 class Batch_agent():
-    def __init__(self,d_in,d_out,layers_V=[200],layers_f=[200],gamma=0.99,alpha=0.92,device=torch.device("cpu")):
+    def __init__(self,d_in,d_out,layers_V=[200],layers_f=[200],alpha=0.92,gamma=0.99,device=torch.device("cpu")):
 
 
         self.device = device
@@ -100,7 +100,7 @@ class Batch_agent():
 
 class Online_agent():
 
-    def __init__(self,d_in,d_out,layers_V=[200],layers_f=[200],gamma=0.99,alpha=0.96,device=torch.device("cpu")):
+    def __init__(self,d_in,d_out,layers_V=[200],layers_f=[200],alpha=0.96,gamma=0.99,device=torch.device("cpu")):
         self.device = device
 
         #NN to approximate V_hat (baseline) and f (distribution function)

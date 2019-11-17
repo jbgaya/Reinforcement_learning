@@ -1,26 +1,12 @@
-import gym
-import gridworld
-from gym import wrappers, logger
 import agents
-from agents import A2C,PPO
+from agents import A2C,PPO,interface
 
-#
-episode_count = 500
-test_episode_count = 10
-
-
-#Initializing environment and variables
-env = gym.make("CartPole-v1")
+#Initializing environment, agent and variables
+env,agent,episode_count = interface.agent_interface()
 env.seed(0)
 reward = 0
 done = False
 rsum = 0
-d_in = env.observation_space.shape[0]
-d_out = env.action_space.n
-
-#Initializing agent
-#agent = A2C.Batch_agent(d_in,d_out)
-agent = PPO.Clip_agent(d_in,d_out)
 
 #Training phase
 print("Starting training phase on ",episode_count," episodes :")

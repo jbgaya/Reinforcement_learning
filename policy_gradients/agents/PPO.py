@@ -108,8 +108,8 @@ class Clip_agent():
 
 class KL_agent():
 
-    def __init__(self,d_in,d_out,gamma=0.9999,layers_V=[200],layers_f=[200],
-    K=10,epochs=5,alpha=0.96,beta=0.5,delta=0.1,entropy=0.01,device=torch.device("cpu")):
+    def __init__(self,d_in,d_out,layers_V=[200],layers_f=[200],
+    K=10,epochs=5,alpha=0.96,beta=0.5,delta=0.1,gamma=0.9999,entropy=0.01,device=torch.device("cpu")):
         self.device = device
 
         #NN to approximate V_hat (baseline) and f (distribution function)
