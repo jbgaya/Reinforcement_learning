@@ -6,14 +6,14 @@ In this folder you can find some policy gradients implementations on gym environ
 
 
 
-![image](https://i.ibb.co/pQXfVnd/Capture-d-cran-de-2019-11-17-18-12-55.png)
+![image](https://i.ibb.co/chCsS0Q/Capture-d-cran-de-2019-11-27-10-31-06.png")
 
 **How to use it** :
 - make sure you already installed [gym](https://github.com/openai/gym), [Pytorch](https://pytorch.org/get-started/locally/),
 and [click](https://click.palletsprojects.com/en/7.x/) packages.
 - download this folder.
 - If you want to get information about environments, algorithms and hyperparameters, run `python main.py --help`.
-- run `python main.py [environment] [algorithm]` and let you guide by the interface. Available algorithms and environments are listed below
+- run `python main.py [environment] [algorithm]` and let you guide by the interface. Available algorithms and environments are listed below.
 
 ## Available algorithms
 
