@@ -81,7 +81,7 @@ alpha,gamma,entropy,beta,delta,epsilon):
             #if env.verbose:
                 #env.render()
             if done:
-                if (i % 10 == 0):
+                if (i % 1 == 0):
                     print("Episode : " + str(i) + " rsum=" + str(round(rsum,2)) + ", " + str(j) + " actions")
                 break
 

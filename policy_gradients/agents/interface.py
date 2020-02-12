@@ -13,7 +13,7 @@ alpha,gamma,entropy,beta,delta,epsilon):
     if(environment not in env_list):
         environment = click.prompt(
             "- environment ",
-            default="Cartpole-v1",
+            default="CartPole-v1",
             type=click.Choice(env_list, case_sensitive=False)
             )
     else:
@@ -30,7 +30,7 @@ alpha,gamma,entropy,beta,delta,epsilon):
     if episodes == None:
         episodes = click.prompt(
             "- nb of episodes ",
-            default=500,
+            default=10000,
             type=click.INT
             )
     else:
@@ -38,7 +38,7 @@ alpha,gamma,entropy,beta,delta,epsilon):
     if alpha == None:
         alpha = click.prompt(
             "- alpha ",
-            default=1.,
+            default=0.97,
             type=click.FLOAT
             )
     else:
@@ -46,7 +46,7 @@ alpha,gamma,entropy,beta,delta,epsilon):
     if gamma == None:
         gamma = click.prompt(
             "- gamma ",
-            default=0.99,
+            default=0.9999,
             type=click.FLOAT
             )
     else:
@@ -67,8 +67,8 @@ alpha,gamma,entropy,beta,delta,epsilon):
     elif algorithm == "PPO_Clipped":
         if minibatchs == None:
             minibatchs = click.prompt(
-                "- minibatch size ",
-                default=10,
+                "- minimum samples before update: ",
+                default=100,
                 type=click.INT
                 )
         else:
@@ -76,7 +76,7 @@ alpha,gamma,entropy,beta,delta,epsilon):
         if epochs == None:
             epochs = click.prompt(
                 "- nb of epochs ",
-                default=10,
+                default=50,
                 type=click.INT
                 )
         else:
@@ -113,7 +113,7 @@ alpha,gamma,entropy,beta,delta,epsilon):
         if epochs == None:
             epochs = click.prompt(
                 "- nb of epochs ",
-                default=10,
+                default=50,
                 type=click.INT
                 )
         else:

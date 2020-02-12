@@ -1,8 +1,9 @@
 from agents.helper import *
+from random import sample
 
 class Clip_agent():
 
-    def __init__(self,d_in,d_out,layers_V=[200],layers_f=[200],K=10,epochs=20,
+    def __init__(self,d_in,d_out,layers_V=[20,20],layers_f=[20,20],K=500,epochs=100,minibatchs=10,
     alpha=0.96,epsilon=0.1,gamma=0.9999,entropy=0.01,device=torch.device("cpu")):
         self.device = device
 
@@ -21,6 +22,8 @@ class Clip_agent():
         self.episode = []
         self.batch = []
         self.K = K
+        self.k = 0
+        self.minibatchs = minibatchs
         self.epochs = epochs
         self.gamma = gamma
         self.alpha = alpha
@@ -32,6 +35,53 @@ class Clip_agent():
         self.start = True
 
     def update(self):
+        batch = []
+        for episode in self.batch:
+            R = torch.zeros(1,dtype=torch.double)
+            for i,(lastobs,action,obs,r) in enumerate(reversed(episode)):
+                R = r + self.gamma * R
+                batch.append((lastobs,action,obs,r,R))
+
+        #1- fit V (baseline function)
+        for epoch in range(self.epochs):
+            sample_batch = sample(batch,self.minibatchs)
+            Vloss = torch.zeros(1,requires_grad=True,dtype=torch.double)
+            for lastobs,action,obs,_,R in sample_batch:
+                Vloss = Vloss + self.loss_V( self.V.forward(lastobs) , R )
+            Vloss = Vloss / self.K
+            Vloss.backward()
+            self.opt_V.step()
+            self.opt_V.zero_grad()
+
+        #2- fit f (policy function)
+        self.lastf.load_state_dict(self.f.state_dict())
+        for epoch in range(self.epochs):
+            #total_loss = 0
+            sample_batch = sample(batch,self.minibatchs)
+            A = torch.zeros(1,dtype=torch.double)
+            floss = torch.zeros(1,requires_grad=True,dtype=torch.double)
+            for lastobs,action,obs,r,_ in sample_batch:
+                with torch.no_grad():
+                    #delta = r + self.gamma * self.V.forward(obs) - self.V.forward(lastobs)
+                    #A = self.gamma * self.alpha * A + delta
+                    A = r + self.gamma * self.V.forward(obs) - self.V.forward(lastobs)
+                    lastpi = self.lastf.forward(lastobs)
+                newpi =  self.f.forward(lastobs)
+                entr = - (newpi * newpi.log()).sum()
+                #print("--------------")
+                #print(newpi[action]/lastpi[action])
+                #print(torch.clamp((newpi[action]/lastpi[action]),1-self.epsilon,1+self.epsilon))
+                floss = floss - min( (newpi[action]/lastpi[action]) * A,
+                    torch.clamp((newpi[action]/lastpi[action]),1-self.epsilon,1+self.epsilon) * A ) + self.entropy * entr
+                #print(floss.item())
+            #total_loss += -round(floss.item(),2)
+            floss = floss / self.K
+            floss.backward()
+            self.opt_f.step()
+            self.opt_f.zero_grad()
+            #print("epoch ",epoch,":",total_loss)
+
+    def real_update(self):
 
         #1- fit V (baseline function)
         for epoch in range(self.epochs):
@@ -87,13 +137,39 @@ class Clip_agent():
 
         if done:
             self.batch.append(self.episode)
+            self.k += len(self.episode)
+            self.episode = []
+            self.lastaction = None
+            self.start = True
+
+            if self.k >= self.K:
+                self.update()
+                self.batch = []
+                self.k = 0
+        return int(action)
+
+    def real_act(self,obs,r,done):
+        obs = phi(obs,self.device)
+        with torch.no_grad():
+            pi = Categorical(probs=self.f.forward(obs))
+        action =pi.sample()
+
+        if(self.start):
+            self.start = False
+        else:
+            self.episode.append((self.lastobs,self.lastaction,obs,r))
+        self.lastobs = obs
+        self.lastaction = action
+
+        if done:
+            self.batch.append(self.episode)
             self.episode = []
             self.lastaction = None
             self.start = True
 
             if len(self.batch) == self.K:
                 #print("updating PPO agent policy...")
-                self.update()
+                self.update_2()
                 self.batch = []
 
         return int(action)
